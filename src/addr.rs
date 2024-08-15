@@ -3,7 +3,7 @@ mod sys {
     mod linux {
         use std::ptr;
         use std::mem::MaybeUninit;
-        use libc::{AF_VSOCK, sockaddr_storage, sockaddr_vm, VMADDR_CID_HOST};
+        use libc::{AF_VSOCK, sockaddr_vm, VMADDR_CID_HOST};
         use socket2::SockAddr;
         use crate::SocketAddr;
 
