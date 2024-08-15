@@ -3,7 +3,7 @@ mod sys {
     mod linux {
         use std::ptr;
         use std::mem::MaybeUninit;
-        use libc::{AF_VSOCK, sockaddr_vm, VMADDR_CID_HOST};
+        use libc::{AF_VSOCK, sockaddr_storage, sockaddr_vm, VMADDR_CID_HOST};
         use socket2::SockAddr;
         use crate::SocketAddr;
 
@@ -11,18 +11,16 @@ mod sys {
 
         impl SocketAddr {
             pub fn new(port: u32) -> Self {
-                let sockaddr_vm = sockaddr_vm {
-                    svm_family: AF_VSOCK as _,
-                    svm_reserved1: 0,
-                    svm_port: port,
-                    svm_cid: VMADDR_CID_HOST,
-                    svm_zero: [0; 4],
-                };
-                let len = size_of::<sockaddr_vm>();
-                let mut storage = MaybeUninit::uninit();
-                unsafe { ptr::copy_nonoverlapping(&sockaddr_vm, storage.as_mut_ptr() as *mut _, len) };
+                let mut storage = MaybeUninit::zeroed();
 
-                unsafe { Self::from_raw_unchecked(SockAddr::new(storage.assume_init(), len as _)) }
+                unsafe {
+                    let storage = storage.as_mut_ptr() as *mut sockaddr_vm;
+                    ptr::addr_of_mut!((*storage).svm_family).write(AF_VSOCK as _);
+                    ptr::addr_of_mut!((*storage).svm_port).write(port);
+                    ptr::addr_of_mut!((*storage).svm_cid).write(VMADDR_CID_HOST);
+                }
+
+                unsafe { Self::from_raw_unchecked(SockAddr::new(storage.assume_init(), size_of::<sockaddr_vm>() as _)) }
             }
         }
     }
@@ -50,17 +48,16 @@ mod sys {
 
         impl SocketAddr {
             pub fn new(vm_id: Uuid, service_id: Uuid) -> Self {
-                let sockaddr_hv = SOCKADDR_HV {
-                    Family: ADDRESS_FAMILY(AF_HYPERV),
-                    Reserved: 0,
-                    VmId: uuid_to_guid(vm_id),
-                    ServiceId: uuid_to_guid(service_id),
-                };
-                let len = size_of::<SOCKADDR_HV>();
-                let mut storage = MaybeUninit::uninit();
-                unsafe { ptr::copy_nonoverlapping(&sockaddr_hv, storage.as_mut_ptr() as *mut _, len) }
+                let mut storage = MaybeUninit::zeroed();
 
-                unsafe { Self::from_raw_unchecked(SockAddr::new(storage.assume_init(), len as _)) }
+                unsafe {
+                    let storage = storage.as_mut_ptr() as *mut SOCKADDR_HV;
+                    ptr::addr_of_mut!((*storage).Family).write(ADDRESS_FAMILY(AF_HYPERV));
+                    ptr::addr_of_mut!((*storage).VmId).write(uuid_to_guid(vm_id));
+                    ptr::addr_of_mut!((*storage).ServiceId).write(uuid_to_guid(service_id));
+                }
+
+                unsafe { Self::from_raw_unchecked(SockAddr::new(storage.assume_init(), size_of::<SOCKADDR_HV>() as _)) }
             }
         }
     }
