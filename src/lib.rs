@@ -1,3 +1,13 @@
+//! # hv_sock
+//!
+//! This crate provides a cross-platform API for Hyper-V sockets.
+//!
+//! Hyper-V sockets allow communication between a host machine and its virtual machines,
+//! or between virtual machines, using a socket-based interface.
+//!
+//! ## Features
+//! - `host-registry`: Enables functionality for interacting with the Hyper-V host registry (Windows-only).
+
 mod sys;
 mod socket;
 mod listener;
