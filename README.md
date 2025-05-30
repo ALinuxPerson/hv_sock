@@ -230,15 +230,6 @@ To build with the `host-registry` feature (on Windows):
 cargo build --features host-registry
 ```
 
-## Running Tests
-```bash
-cargo test
-```
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a pull request or open an issue if you find a bug or have a feature request.
-
 ## License
 
 This project is licensed under the MIT license.
